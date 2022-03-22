@@ -8,13 +8,15 @@ import requests
 import hashlib
 from urllib.parse import urlencode
 
+# aws 서버에서 돌릴때는 decode('utf-8')을 지워준다.
+
 access_key ='access_key'
 secret_key ='secret_key'
 upbit = pyupbit.Upbit(access_key, secret_key)
 
 #------------------------------------------------------------
 # slack-bot
-mytoken = 'slack_mytoken'
+mytoken = 'stack_mytoken'
 channel = '#stock'              # 채널설정
 
 
@@ -31,7 +33,7 @@ data_count = 15
 coin = "BTC"            # coin kind
 coin_KRW = "KRW-" + coin # 50번재 줄
 
-interval = 'minute240'             # 26줄째 줄, 이동평균선 240분(4시간), 60분(1시간), 30분 정하기
+interval = 'minute1'             # 26줄째 줄, 이동평균선 240분(4시간), 60분(1시간), 30분 정하기
 MA_NUMBER = 5                     # 단순 MA5 = 5, 단순 MA10 = 10, 단순 MA60 =60
 
 # 몇분동안 실행시킬것인가. running time
@@ -41,7 +43,7 @@ end_time = datetime.datetime.now() +timedelta(days=30) # 60분만 돌아가게 �
 def get_ma(ticker): # ticker 예시 "KRW-BTC"
     """이동 평균선 조회"""
     df = pyupbit.get_ohlcv(ticker, interval= interval,
-                           count=data_count)  # 4시간
+    count=data_count)  # 4시간
     ma10 = df['close'].rolling(MA_NUMBER).mean()
     return ma10
 
@@ -199,6 +201,8 @@ while (datetime.datetime.now() < end_time ):
             data = res.json()
             # print(data)
 
+            BTC_buy_price = 0                       # 여기서 0을 만들어줘야, 밑에서 sell을 계속 안한다.
+
             for i in list(range(0,len(data))):
                 if data[i]['currency'] == coin:                                        # BTC인거 찾아라
                     print('비트코인 보유량 : ', data[i]['balance'])                     # BTC 보유개수를 보여줘, 형식 str
@@ -216,7 +220,7 @@ while (datetime.datetime.now() < end_time ):
             BTC_TO_KRW_BALANCE = BTC_balance * BTC_buy_price # 비트코인 총 매수 금액
             # print(BTC_TO_KRW_BALANCE)
      
-            if BTC_TO_KRW_BALANCE > 5000: # BTC_TO_KRW_BALANCE는 int
+            if (BTC_TO_KRW_BALANCE > 5000) : # BTC_TO_KRW_BALANCE는 int
                 #----------------------------------------------------------------
                 # 매도 시작 start
                 print('---------------------------------sell-------------------------------------------')
